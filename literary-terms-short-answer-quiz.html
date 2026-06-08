@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>문학 용어 단답형 퀴즈 — 기말고사 대비</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Spectral:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4efe4;
+    --paper-2:#ece4d3;
+    --ink:#211c17;
+    --ink-soft:#5b5347;
+    --line:#cbbfa6;
+    --accent:#7a2e2e;       /* oxblood */
+    --accent-soft:#a35b4f;
+    --good:#356b4f;
+    --good-bg:#e3eee5;
+    --bad:#9b2c2c;
+    --bad-bg:#f4e3df;
+    --warn:#8a6d1f;
+    --warn-bg:#f3ecd6;
+    --shadow:0 1px 0 rgba(33,28,23,.06),0 14px 40px -22px rgba(33,28,23,.55);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #fbf7ee 0%, transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, #efe7d6 0%, transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    font-family:"Gowun Batang","Newsreader",Georgia,serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:42px 22px 90px}
+
+  /* ---------- masthead ---------- */
+  header.mast{
+    border-bottom:2.5px solid var(--ink);
+    padding-bottom:18px;margin-bottom:10px;position:relative;
+  }
+  .kicker{
+    font-family:"Spectral",serif;letter-spacing:.42em;text-transform:uppercase;
+    font-size:11px;color:var(--accent);font-weight:600;margin:0 0 8px;
+  }
+  h1{
+    font-family:"Newsreader",serif;font-weight:600;font-size:clamp(30px,6vw,46px);
+    line-height:1.04;margin:0;letter-spacing:-.01em;
+  }
+  h1 em{font-style:italic;color:var(--accent)}
+  .sub{font-size:14.5px;color:var(--ink-soft);margin:10px 0 0;max-width:60ch}
+
+  /* ---------- control bar ---------- */
+  .controls{
+    display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;
+    margin:20px 0 4px;padding:14px 16px;background:var(--paper-2);
+    border:1px solid var(--line);border-radius:3px;
+  }
+  .ctl-group{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-soft)}
+  .ctl-group label{font-weight:700;color:var(--ink);letter-spacing:.02em}
+  select,.btn{
+    font-family:inherit;font-size:13.5px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:2px;
+    padding:6px 10px;cursor:pointer;
+  }
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .seg button{
+    font-family:inherit;font-size:13px;border:none;background:var(--paper);
+    color:var(--ink-soft);padding:7px 13px;cursor:pointer;border-right:1px solid var(--line);
+  }
+  .seg button:last-child{border-right:none}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:700}
+  .btn{font-weight:700;letter-spacing:.02em}
+  .btn:hover{border-color:var(--ink)}
+  .btn.primary{background:var(--accent);color:#fbf3ee;border-color:var(--accent)}
+  .btn.primary:hover{background:#5f2222}
+  .spacer{flex:1 1 auto}
+
+  /* ---------- progress ---------- */
+  .progress-row{display:flex;align-items:center;gap:12px;margin:18px 0 6px;font-size:13px;color:var(--ink-soft)}
+  .bar{flex:1;height:6px;background:var(--paper-2);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-soft));transition:width .4s ease}
+
+  /* ---------- question card ---------- */
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:3px;padding:20px 22px;margin:14px 0;box-shadow:var(--shadow);
+    transition:border-color .25s,transform .25s;
+  }
+  .card .qhead{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+  .qnum{font-family:"Spectral",serif;font-weight:600;color:var(--accent);font-size:15px;min-width:46px}
+  .qcat{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:99px;padding:2px 10px;white-space:nowrap}
+  .qdef{font-size:17px;line-height:1.72;margin:2px 0 14px;color:var(--ink)}
+  .answer-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .answer-row input[type=text]{
+    flex:1;min-width:200px;font-family:inherit;font-size:16px;color:var(--ink);
+    background:#fffdf7;border:1px solid var(--line);border-bottom:2px solid var(--ink-soft);
+    border-radius:2px 2px 0 0;padding:10px 12px;outline:none;transition:border-color .2s;
+  }
+  .answer-row input:focus{border-bottom-color:var(--accent)}
+  .answer-row input::placeholder{color:#a89c84}
+  .mini{font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;border:1px solid var(--ink);
+    background:var(--paper);border-radius:2px;cursor:pointer}
+  .mini:hover{background:var(--ink);color:var(--paper)}
+
+  /* feedback states */
+  .card.correct{border-left-color:var(--good)}
+  .card.wrong{border-left-color:var(--bad)}
+  .card.near{border-left-color:var(--warn)}
+  .verdict{margin-top:12px;font-size:14px;padding:10px 12px;border-radius:2px;display:none}
+  .verdict.show{display:block}
+  .verdict.v-good{background:var(--good-bg);color:var(--good)}
+  .verdict.v-bad{background:var(--bad-bg);color:var(--bad)}
+  .verdict.v-warn{background:#f3ecd6;color:var(--warn)}
+  .verdict b{font-weight:700}
+  .verdict .ans{font-family:"Spectral",serif;font-weight:600}
+  .verdict .accepts{display:block;margin-top:5px;font-size:12.5px;color:var(--ink-soft)}
+
+  input[disabled]{opacity:.85;cursor:default}
+
+  /* ---------- result panel ---------- */
+  .result{
+    display:none;background:var(--ink);color:var(--paper);border-radius:4px;
+    padding:26px 24px;margin:18px 0;box-shadow:var(--shadow);
+  }
+  .result.show{display:block;animation:rise .5s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .score-big{font-family:"Newsreader",serif;font-size:54px;line-height:1;font-weight:600}
+  .score-big small{font-size:22px;opacity:.7}
+  .grade-tag{display:inline-block;margin-left:12px;font-family:"Spectral",serif;font-size:14px;
+    letter-spacing:.18em;border:1px solid var(--paper);border-radius:99px;padding:3px 14px;vertical-align:middle}
+  .result .line{height:1px;background:rgba(244,239,228,.25);margin:16px 0}
+  .result .meta{font-size:14px;opacity:.85;display:flex;gap:22px;flex-wrap:wrap}
+  .result .meta b{color:#f0c9a0}
+  .review-title{font-family:"Spectral",serif;letter-spacing:.16em;text-transform:uppercase;font-size:12px;opacity:.7;margin:18px 0 8px}
+  .review-item{font-size:14px;padding:7px 0;border-bottom:1px dashed rgba(244,239,228,.2)}
+  .review-item .rt{color:#f0c9a0;font-family:"Spectral",serif}
+  .review-item .ru{opacity:.7}
+
+  /* ---------- grading-rule panel ---------- */
+  details.rules{margin:24px 0 0;border:1px dashed var(--line);border-radius:3px;background:var(--paper-2)}
+  details.rules summary{cursor:pointer;padding:13px 16px;font-weight:700;font-size:14px;letter-spacing:.02em;list-style:none}
+  details.rules summary::-webkit-details-marker{display:none}
+  details.rules summary::before{content:"▸ ";color:var(--accent)}
+  details.rules[open] summary::before{content:"▾ "}
+  .rules .body{padding:0 18px 16px;font-size:13.5px;color:var(--ink-soft)}
+  .rules .body ol{margin:6px 0;padding-left:20px}
+  .rules .body li{margin:6px 0}
+  .rules code{background:#fffdf7;border:1px solid var(--line);border-radius:2px;padding:1px 5px;font-size:12.5px}
+
+  footer{margin-top:34px;text-align:center;font-size:12px;color:var(--ink-soft);letter-spacing:.04em}
+  .hide{display:none!important}
+  @media(max-width:560px){
+    .qcat{display:none}
+    .answer-row input{min-width:140px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <p class="kicker">English Fiction · Final Exam Drill</p>
+    <h1>문학 용어 <em>단답형</em> 퀴즈</h1>
+    <p class="sub">정의를 읽고 해당하는 용어를 입력하세요. 한국어·영어 어느 쪽으로 답해도 인정됩니다. 총 <b id="totalN">46</b>문항.</p>
+  </header>
+
+  <div class="controls">
+    <div class="ctl-group">
+      <label>모드</label>
+      <div class="seg" id="modeSeg" role="group" aria-label="채점 모드">
+        <button data-mode="practice" aria-pressed="true">연습(즉시채점)</button>
+        <button data-mode="exam" aria-pressed="false">시험(일괄채점)</button>
+      </div>
+    </div>
+    <div class="ctl-group">
+      <label for="catSel">범위</label>
+      <select id="catSel">
+        <option value="all">전체</option>
+        <option value="요소">문학·소설의 요소</option>
+        <option value="시점">시점 / 서술</option>
+        <option value="기법">서술 기법·구조</option>
+        <option value="종류">소설의 종류</option>
+        <option value="비평">비평 이론</option>
+      </select>
+    </div>
+    <div class="ctl-group">
+      <label for="shuffleChk">셔플</label>
+      <input type="checkbox" id="shuffleChk">
+    </div>
+    <span class="spacer"></span>
+    <button class="btn" id="resetBtn">초기화</button>
+    <button class="btn primary" id="gradeBtn">채점하기</button>
+  </div>
+
+  <div class="progress-row">
+    <span id="answeredLbl">작성 0 / 46</span>
+    <div class="bar"><i id="barFill"></i></div>
+    <span id="pctLbl">0%</span>
+  </div>
+
+  <div id="result" class="result" aria-live="polite"></div>
+
+  <div id="quiz"></div>
+
+  <details class="rules">
+    <summary>채점 메커니즘 (어떻게 정답으로 인정되나)</summary>
+    <div class="body">
+      <ol>
+        <li><b>정규화</b> — 입력값과 정답 모두 공백·괄호·문장부호를 제거하고 영문은 소문자로 변환해 비교합니다. <code>Point of View = pointofview = 시점</code></li>
+        <li><b>복수 정답(Alias)</b> — 각 문항은 <b>한국어명·영어명·축약형</b>을 모두 정답으로 받습니다. 예: <code>다성성 / polyphony / 폴리포니</code> 모두 정답.</li>
+        <li><b>오타 허용(Fuzzy)</b> — 5글자 이상 답안은 편집거리(Levenshtein) 1까지 정답 처리하고 "오타 허용"으로 표시합니다. <code>polyphany → polyphony</code></li>
+        <li><b>근접 표시</b> — 오답이라도 편집거리 2 이내면 "근접"으로 알려 복습을 돕습니다. (점수에는 미반영)</li>
+        <li><b>이진 채점 + 점수</b> — 단답형이므로 정/오로 채점하고 <code>맞은 수 ÷ 전체 × 100</code> 으로 점수와 등급(A+~F)을 냅니다.</li>
+        <li><b>오답 노트</b> — 시험 모드 종료 시 틀린 문항과 정답을 자동 정리합니다.</li>
+      </ol>
+    </div>
+  </details>
+
+  <footer>업로드한 「기말고사 키워드 정리」 기반 · 정의는 학습용으로 정서(整書)됨</footer>
+</div>
+
+<script>
+/* =========================================================
+   QUESTION BANK  (정의 제시 → 용어 단답)
+   accept[] : 정규화 후 비교할 허용 정답 목록 (KR/EN/축약)
+   ========================================================= */
+const BANK = [
+  // ----- 문학·소설의 요소 -----
+  {cat:"요소", display:"플롯 (Plot)", accept:["플롯","plot","구성"],
+   def:"소설에서 사건이 전개되는 구조적 틀로, 이야기의 시작부터 끝까지 사건들이 인과적으로 연결되어 전체 서사를 구성하는 것."},
+  {cat:"요소", display:"인물 (Character)", accept:["인물","character","캐릭터"],
+   def:"소설 속에서 행동하고 대화하며 이야기를 이끌어가는 존재. 성격·동기·갈등이 독자의 공감과 몰입을 이끈다. (Round/Flat, Protagonist/Antagonist 등으로 분류)"},
+  {cat:"요소", display:"배경 (Setting)", accept:["배경","setting"],
+   def:"이야기가 펼쳐지는 시간적(Temporal)·공간적(Spatial)·사회적(Social) 환경. 단순한 장소가 아니라 인물 심리와 주제를 반영·강화하는 핵심 요소이며 분위기(Mood)와 연결된다."},
+  {cat:"요소", display:"주제 (Theme)", accept:["주제","theme"],
+   def:"작품이 전달하고자 하는 중심 사상이나 메시지. 무엇에 관한 이야기인가(소재)와 달리, 작가가 그 소재를 통해 궁극적으로 말하고자 하는 바."},
+  {cat:"요소", display:"소재 (Subject Matter)", accept:["소재","subjectmatter","subject matter"],
+   def:"작가가 작품을 형상화할 때 자료가 되는 일체의 재료. 표현 수단으로서의 '매제'와 표현 대상으로서의 '제재'로 나뉜다."},
+  {cat:"요소", display:"시점 (Point of View)", accept:["시점","pointofview","point of view","pov"],
+   def:"서술자의 위치를 조정하여 이야기의 전달 방식을 구성하는 것. 화자가 누구인지에 따라 달라지며, 잘 활용하면 몰입감을 극대화한다."},
+  {cat:"시점", display:"화자 (Speaker / Narrator)", accept:["화자","speaker","narrator","서술자"],
+   def:"이야기를 전달하는 목소리이자 서술의 주체. 이야기를 '말하는' 사람으로, 이야기를 이끌어가는 인물(Character)과는 구별된다."},
+
+  // ----- 시점의 종류 -----
+  {cat:"시점", display:"1인칭 주인공 시점", accept:["1인칭주인공시점","일인칭주인공시점","1인칭주인공","first person protagonist","firstpersonmajor"],
+   def:"서술자=주인공. 작품 속 인물 자신이 '나'로서 자기 이야기를 직접 서술하는 시점."},
+  {cat:"시점", display:"1인칭 관찰자 시점", accept:["1인칭관찰자시점","일인칭관찰자시점","1인칭관찰자","관찰자시점","first person observer"],
+   def:"작품 속의 인물('나')이 주인공을 곁에서 관찰하여 그 이야기를 전하는 시점."},
+  {cat:"시점", display:"2인칭 시점", accept:["2인칭시점","이인칭시점","2인칭","second person","secondperson"],
+   def:"독자(또는 인물)를 '너/당신'으로 직접 지칭하며 서술하는 시점."},
+  {cat:"시점", display:"전지적 작가 시점 (3인칭)", accept:["전지적작가시점","3인칭전지적작가시점","전지적시점","omniscient","omniscientpointofview","전지적작가"],
+   def:"서술자가 전지전능한 위치에서 모든 인물의 내면과 사건을 자유롭게 넘나들며 전달하는 3인칭 시점."},
+  {cat:"시점", display:"작가 관찰자 시점 (3인칭)", accept:["작가관찰자시점","3인칭작가관찰자시점","작가관찰자","3인칭관찰자시점","authorial observer","thirdpersonobjective"],
+   def:"서술자가 외부 관찰자의 위치에서 객관적 태도로 인물과 사건을 서술하는 3인칭 시점."},
+
+  // ----- 서술 방식 -----
+  {cat:"기법", display:"객관적 시점 (Objective Narration)", accept:["객관적시점","objective narration","objectivenarration","객관적서술"],
+   def:"화자가 인물의 내면에 접근하지 않고 카메라처럼 외부에서 관찰 가능한 것만 서술하는 방식. '그녀는 슬펐다'가 아니라 '그녀는 고개를 숙였다'로 표현하며, 헤밍웨이의 빙산이론과 연결된다."},
+  {cat:"기법", display:"제한적 시점 (Limited Narration)", accept:["제한적시점","limited narration","limitednarration","제한적서술","제한시점"],
+   def:"한 번에 하나의 인물 의식에만 접근하여 그 인물의 관점에 제한되게 서술하는 방식(one consciousness at a time). 화자가 모르는 것은 독자도 모르므로 긴장과 미스터리가 생긴다."},
+  {cat:"기법", display:"다중 시점 (Multiple Point of View)", accept:["다중시점","multiple point of view","multiplepointofview","multiplepov","다중적시점"],
+   def:"하나의 작품 안에서 여러 화자 또는 여러 인물의 시각이 교차하며 서술되는 방식. 독자는 여러 시각을 종합해 다층적 진실에 접근한다. (Focalization Shift와 연결)"},
+  {cat:"기법", display:"초점화 (Focalization)", accept:["초점화","focalization","focalisation"],
+   def:"이야기에서 정보가 전달되는 방식과 범위를 조절하는 기법. 제로 초점화(전지적), 내적 초점화(특정 인물의 의식), 외적 초점화(외부 관찰)로 나뉜다."},
+  {cat:"기법", display:"자유간접화법 (Free Indirect Discourse)", accept:["자유간접화법","free indirect discourse","freeindirectdiscourse","fid","자유간접담화"],
+   def:"전달 동사 없이 인물의 생각·말을 화자의 서술에 자연스럽게 녹여 3인칭의 객관성과 1인칭의 주관성을 동시에 얻는 고도의 기법. ('아, 오늘 날씨가 얼마나 추운지!')"},
+  {cat:"기법", display:"신뢰 가능한 화자 (Reliable Narrator)", accept:["신뢰가능한화자","신뢰화자","reliable narrator","reliablenarrator","신뢰할수있는화자"],
+   def:"독자가 믿을 수 있는 정보를 제공하는 화자. 도덕적 기준과 사실 정보가 일관되어 이야기의 권위와 객관성을 담보한다."},
+  {cat:"기법", display:"불신 화자 (Unreliable Narrator)", accept:["불신화자","신뢰할수없는화자","unreliable narrator","unreliablenarrator"],
+   def:"독자가 신뢰하기 어려운 정보를 제공하는 화자. 의도적 기만자, 순진한 화자(아이·외부인), 정신적 결함자 등이 있다."},
+  {cat:"기법", display:"의식의 흐름 (Stream of Consciousness)", accept:["의식의흐름","stream of consciousness","streamofconsciousness","의식흐름"],
+   def:"끊임없이 흘러가는 생각·기억·감정·감각을 논리적으로 정제하지 않고 떠오르는 그대로 서술하는 기법. 인물의 내면을 가장 진실하게 드러내며 리얼리즘을 극대화한다."},
+  {cat:"기법", display:"다성성 (Polyphony)", accept:["다성성","polyphony","폴리포니","다성악"],
+   def:"여러 목소리와 관점이 대등하게 공존하는 서술 방식. 작가의 목소리가 절대적 지배권을 갖지 않고 여러 인물의 이데올로기가 충돌하며 이야기를 끌어간다."},
+  {cat:"기법", display:"선형 전개 (Linear)", accept:["선형전개","선형","linear","선형적전개","linear narrative"],
+   def:"사건을 시간 순서대로 진행하는 이야기 방식. 흐름을 놓치지 않고 따라가기 쉬우며 '무슨 일이 일어났는가'를 효과적으로 전달한다."},
+  {cat:"기법", display:"비선형 전개 (Non-linear)", accept:["비선형전개","비선형","nonlinear","non linear","비선형적전개"],
+   def:"사건을 시간 순서대로 보여주지 않고 과거와 현재를 섞어 파편적으로 배열하는 서술. 기억의 조각처럼 정보를 흘려 호기심·몰입·결말의 충격을 극대화한다."},
+
+  // ----- 사조 -----
+  {cat:"종류", display:"리얼리즘 (Realism)", accept:["리얼리즘","realism","사실주의","리얼리즘소설"],
+   def:"19세기 유럽에서 시작되어 현실을 왜곡·미화하지 않고 있는 그대로 객관적으로 묘사하려는 사조. 평범한 사람들의 삶과 사회문제를 선형 구성·전지적 화자·세밀한 묘사로 그린다."},
+  {cat:"종류", display:"모더니즘 (Modernism)", accept:["모더니즘","modernism","모더니즘소설"],
+   def:"20세기 초(약 1900–1940) 전통적 서사 방식을 거부하고 인간의 내면 의식을 탐구하며 파편화된 현실을 표현한 사조. 의식의 흐름·비선형·다중시점을 쓰되 진실에 대한 믿음은 유지했다."},
+  {cat:"종류", display:"포스트모더니즘 (Post-Modernism)", accept:["포스트모더니즘","postmodernism","post-modernism","post modernism","포스트모더니즘소설"],
+   def:"2차 대전 이후(1960년대 본격화) 모더니즘의 진지함을 해체·풍자하고 현실과 허구의 경계를 허무는 사조. 메타픽션·패러디·이질적 요소의 결합이 특징."},
+
+  // ----- 소설의 종류 -----
+  {cat:"종류", display:"단편 소설 (Short Story)", accept:["단편소설","단편","short story","shortstory"],
+   def:"약 1,000~7,500단어의 짧은 분량으로 인생의 짧은 순간이나 강렬한 사건 하나에 집중하는 소설. 흔히 예상치 못한 반전으로 끝난다."},
+  {cat:"종류", display:"노벨라 (Novella)", accept:["노벨라","novella","중편소설","중편"],
+   def:"단편보다 길고 장편보다 짧은 중편 소설(약 17,000~40,000단어). 단편처럼 한 사건에 집중하면서 주인공의 속마음을 장편처럼 깊게 들여다본다."},
+  {cat:"종류", display:"장편소설 (Novel)", accept:["장편소설","장편","novel","노벨"],
+   def:"최소 40,000단어 이상의 완결판 이야기. 수많은 인물과 복잡한 사건이 얽혀 주인공의 성장과 사회 전체의 모습을 대규모로 보여준다."},
+  {cat:"종류", display:"사실주의 소설 (Realist Novel)", accept:["사실주의소설","realist novel","realistnovel"],
+   def:"환상 대신 진짜 세상을 거울처럼 투명하게 보여주는 소설. 평범한 사람들의 돈·결혼·신분 문제를 사실적으로 다루며 기적 없이 현실적 한계를 인정하며 끝난다."},
+  {cat:"종류", display:"자연주의 소설 (Naturalist Novel)", accept:["자연주의소설","naturalist novel","naturalistnovel"],
+   def:"인간을 자유의지가 아니라 '환경'과 '유전'에 지배받는 생물로 보는 소설. 작가가 과학자처럼 인간이 처참한 환경에서 몰락하는 과정을 관찰·분석한다."},
+  {cat:"종류", display:"피카레스크 소설 (Picaresque Novel)", accept:["피카레스크소설","피카레스크","picaresque novel","picaresque"],
+   def:"밑바닥 인생의 주인공(악한)이 여러 곳을 떠돌며 겪는 모험기. 인과적 플롯보다 독립적 에피소드가 나열되며 사회를 풍자한다."},
+  {cat:"종류", display:"액자소설 (Frame Narrative)", accept:["액자소설","frame narrative","framenarrative","액자식소설","framestory"],
+   def:"이야기 속에 또 다른 이야기가 삽입된 구조의 소설. 겉의 이야기로 액자를 열고 진짜 이야기를 지나 다시 현재로 돌아와 액자를 닫는다."},
+  {cat:"종류", display:"서간체 소설 (Epistolary Novel)", accept:["서간체소설","서간체","epistolary novel","epistolary"],
+   def:"사건의 제시와 전개가 주로 인물 간에 주고받는 편지로 이루어지는 소설. 자기고백적 서사와 다중 화자 구조가 특징."},
+  {cat:"종류", display:"고딕 소설 (Gothic Novel)", accept:["고딕소설","고딕","gothic novel","gothic"],
+   def:"18세기 후반 영국 낭만주의의 한 갈래로, 음산한 분위기·신비·공포·로맨스를 결합한 소설. 끔찍한 비밀을 숨긴 크고 오래된 저택을 중심으로 전개되며 초자연적 요소를 활용한다."},
+  {cat:"종류", display:"성장 소설 (Bildungsroman)", accept:["성장소설","bildungsroman","빌둥스로만"],
+   def:"주인공이 유년기에서 성인기로, 미성숙에서 성숙으로 성장하는 과정을 보여주는 소설. 시련·불행과 통과의례에 초점을 맞춘다."},
+  {cat:"종류", display:"역사소설 (Historical Novel)", accept:["역사소설","historical novel","historicalnovel"],
+   def:"역사적 시대를 배경으로 실제 역사적 사건·인물을 소재 삼아 허구적으로 서술한 소설. 과거 사실을 바탕으로 문학적 진실성과 교훈을 전달한다."},
+  {cat:"종류", display:"지역소설 (Regional Novel)", accept:["지역소설","regional novel","regionalnovel","향토소설"],
+   def:"특정 지역의 문화·풍습·방언·역사·풍경을 사실적으로 묘사하는 소설. 배경을 넘어 그 지역 환경이 인물의 성격·행동·사건 전개에 결정적 영향을 미친다."},
+  {cat:"종류", display:"공상과학소설 (Science Fiction)", accept:["공상과학소설","sf","science fiction","sciencefiction","과학소설","sci-fi","scifi"],
+   def:"과학적 사실이나 기술적 가설을 바탕으로 미래·우주·다른 차원의 현실을 다루는 장르. 기술 문명이 인간의 삶과 사회에 미치는 영향을 탐구하며 경이감을 준다."},
+  {cat:"종류", display:"메타픽션 (Metafiction)", accept:["메타픽션","metafiction","메타소설"],
+   def:"작품이 스스로 허구임을 인식하고 그 사실을 독자에게 드러내는 서사 기법. 제4의 벽을 깨고 극중극 구조를 띠며 포스트모더니즘의 특징을 지닌다."},
+
+  // ----- 비평의 종류 -----
+  {cat:"비평", display:"신비평 (New Criticism)", accept:["신비평","new criticism","newcriticism"],
+   def:"텍스트 중심주의 비평. 작가의 의도와 독자의 감상을 배제하고 작품에 사용된 언어적 요소를 정밀하게 분석한다. 운문 분석에 탁월하나 사회·정치적 맥락을 배제한 한계가 있다."},
+  {cat:"비평", display:"신화원형 비평 (Archetypal Criticism)", accept:["신화원형비평","원형비평","archetypal criticism","archetypalcriticism","신화비평","mythcriticism"],
+   def:"작품 속 반복되는 신화적 원형과 상징을 분석하는 비평. 인간의 보편적 경험과 집단 무의식을 중시한다(탄생/죽음, 통과의례, 여행/귀환, 빛/어둠 등)."},
+  {cat:"비평", display:"정신분석 비평 (Psychoanalytic Criticism)", accept:["정신분석비평","psychoanalytic criticism","psychoanalyticcriticism","정신분석학비평","psychoanalytical criticism"],
+   def:"프로이트·라캉 등의 정신분석 이론(무의식·억압·리비도·오이디푸스 콤플렉스)을 바탕으로 작가의 무의식, 인물의 심리, 상징을 분석해 작품의 숨겨진 의미를 탐구하는 비평."},
+  {cat:"비평", display:"마르크스주의 비평 (Marxist Criticism)", accept:["마르크스주의비평","마르크스비평","marxist criticism","marxistcriticism","막스주의비평"],
+   def:"사회·경제적 맥락에서 작품을 분석하는 비평. 문학을 당대 사회상을 비추는 창으로 보고 인물의 계급(부르주아/프롤레타리아)과 작품에 숨은 지배 이데올로기를 비판적으로 분석한다."},
+  {cat:"비평", display:"페미니즘 비평 (Feminist Criticism)", accept:["페미니즘비평","feminist criticism","feministcriticism","여성주의비평"],
+   def:"작품 속 성별 역할과 여성의 위치를 분석하는 비평. 가부장제와 젠더 이데올로기를 비판하고, 문학이 여성을 어떻게 재현하며 그 방식이 가부장적 질서를 유지/전복하는지 탐구한다."},
+  {cat:"비평", display:"탈식민주의 비평 (Postcolonial Criticism)", accept:["탈식민주의비평","postcolonial criticism","postcolonialcriticism","탈식민비평","후기식민주의비평"],
+   def:"식민주의·제국주의가 사람·사회·문화에 남긴 영향을 연구하는 비평. 타자화와 언어를 통한 지배/저항을 분석하며 억압에 대한 대응과 회복을 함께 본다."},
+];
+
+/* =========================================================
+   GRADING ENGINE
+   ========================================================= */
+function normalize(s){
+  return (s||"")
+    .toLowerCase()
+    .normalize("NFC")
+    .replace(/[\s]/g,"")                       // 공백 제거
+    .replace(/[()\[\]{}.,!?;:'"·•\-_/\\]/g,"") // 문장부호/괄호/하이픈 제거
+    .trim();
+}
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i),cur=new Array(n+1);
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++){
+      const cost=a[i-1]===b[j-1]?0:1;
+      cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+cost);
+    }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+// returns {status:'correct'|'near'|'wrong', fuzzy:bool, dist:n}
+function judge(input, accepts){
+  const u=normalize(input);
+  if(!u) return {status:"wrong", fuzzy:false, dist:99};
+  const norm=accepts.map(normalize);
+  if(norm.includes(u)) return {status:"correct", fuzzy:false, dist:0};
+  // fuzzy: accept edit-distance 1 on strings length>=5
+  let best=99;
+  for(const a of norm){
+    const d=levenshtein(u,a);
+    if(d<best) best=d;
+    if(Math.max(u.length,a.length)>=5 && d<=1) return {status:"correct", fuzzy:true, dist:d};
+  }
+  if(best<=2) return {status:"near", fuzzy:false, dist:best};
+  return {status:"wrong", fuzzy:false, dist:best};
+}
+function gradeToTag(p){
+  if(p>=95)return["A+","#cdebd6"]; if(p>=90)return["A","#cdebd6"];
+  if(p>=85)return["B+","#e6e0c0"]; if(p>=80)return["B","#e6e0c0"];
+  if(p>=75)return["C+","#f0d8b8"]; if(p>=70)return["C","#f0d8b8"];
+  if(p>=60)return["D","#f0c9a0"]; return["F","#f0b0a0"];
+}
+
+/* =========================================================
+   STATE + RENDER
+   ========================================================= */
+let mode="practice";          // practice | exam
+let activeList=[];            // current rendered questions
+const $=s=>document.querySelector(s);
+const quizEl=$("#quiz");
+
+function buildList(){
+  const cat=$("#catSel").value;
+  let list=BANK.map((q,i)=>({...q,_orig:i}));
+  if(cat!=="all") list=list.filter(q=>q.cat===cat);
+  if($("#shuffleChk").checked){
+    for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}
+  }
+  activeList=list;
+}
+
+function render(){
+  buildList();
+  quizEl.innerHTML="";
+  $("#result").className="result";
+  $("#totalN").textContent=BANK.length;
+  activeList.forEach((q,idx)=>{
+    const card=document.createElement("div");
+    card.className="card"; card.dataset.idx=idx;
+    card.innerHTML=`
+      <div class="qhead">
+        <span class="qnum">Q${String(idx+1).padStart(2,"0")}</span>
+        <span class="qcat">${q.cat}</span>
+      </div>
+      <p class="qdef">${q.def}</p>
+      <div class="answer-row">
+        <input type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+               placeholder="용어를 입력하세요 (한국어 또는 영어)…" data-idx="${idx}">
+        <button class="mini" data-check="${idx}">확인</button>
+      </div>
+      <div class="verdict" data-verdict="${idx}"></div>`;
+    quizEl.appendChild(card);
+  });
+  // wire inputs
+  quizEl.querySelectorAll("input[type=text]").forEach(inp=>{
+    inp.addEventListener("input",updateProgress);
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        e.preventDefault();
+        if(mode==="practice"){ checkOne(+inp.dataset.idx); }
+        const next=quizEl.querySelector(`input[data-idx="${+inp.dataset.idx+1}"]`);
+        if(next) next.focus();
+      }
+    });
+  });
+  quizEl.querySelectorAll("[data-check]").forEach(b=>{
+    b.addEventListener("click",()=>checkOne(+b.dataset.check));
+    b.style.display = mode==="practice" ? "" : "none";
+  });
+  updateProgress();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function showVerdict(idx, res, q){
+  const card=quizEl.querySelector(`.card[data-idx="${idx}"]`);
+  const v=quizEl.querySelector(`[data-verdict="${idx}"]`);
+  card.classList.remove("correct","wrong","near");
+  v.className="verdict show";
+  if(res.status==="correct"){
+    card.classList.add("correct"); v.classList.add("v-good");
+    v.innerHTML = res.fuzzy
+      ? `<b>정답 ✓</b> (오타 허용 처리) — 정답: <span class="ans">${q.display}</span>`
+      : `<b>정답 ✓</b> — <span class="ans">${q.display}</span>`;
+  }else if(res.status==="near"){
+    card.classList.add("near"); v.classList.add("v-warn");
+    v.innerHTML=`<b>오답 (근접)</b> — 거의 맞았어요. 정답: <span class="ans">${q.display}</span>
+      <span class="accepts">인정 답안: ${q.accept.join(" · ")}</span>`;
+  }else{
+    card.classList.add("wrong"); v.classList.add("v-bad");
+    v.innerHTML=`<b>오답 ✗</b> — 정답: <span class="ans">${q.display}</span>
+      <span class="accepts">인정 답안: ${q.accept.join(" · ")}</span>`;
+  }
+}
+
+function checkOne(idx){
+  const q=activeList[idx];
+  const inp=quizEl.querySelector(`input[data-idx="${idx}"]`);
+  const res=judge(inp.value,q.accept);
+  showVerdict(idx,res,q);
+  return res;
+}
+
+function updateProgress(){
+  const inputs=[...quizEl.querySelectorAll("input[type=text]")];
+  const filled=inputs.filter(i=>i.value.trim()!=="").length;
+  const total=inputs.length||1;
+  const pct=Math.round(filled/total*100);
+  $("#answeredLbl").textContent=`작성 ${filled} / ${inputs.length}`;
+  $("#barFill").style.width=pct+"%";
+  $("#pctLbl").textContent=pct+"%";
+}
+
+function gradeAll(){
+  let correct=0, fuzzy=0, near=0;
+  const wrong=[];
+  activeList.forEach((q,idx)=>{
+    const inp=quizEl.querySelector(`input[data-idx="${idx}"]`);
+    const res=judge(inp.value,q.accept);
+    showVerdict(idx,res,q);
+    inp.disabled=true;
+    if(res.status==="correct"){correct++; if(res.fuzzy)fuzzy++;}
+    else { if(res.status==="near")near++; wrong.push({q,given:inp.value.trim()}); }
+  });
+  const total=activeList.length;
+  const pct=Math.round(correct/total*100);
+  const [g,clr]=gradeToTag(pct);
+  const r=$("#result");
+  r.innerHTML=`
+    <div><span class="score-big">${correct}<small> / ${total}</small></span>
+      <span class="grade-tag" style="color:${clr};border-color:${clr}">${g} · ${pct}점</span></div>
+    <div class="line"></div>
+    <div class="meta">
+      <span>정답 <b>${correct}</b></span>
+      <span>오타 허용 <b>${fuzzy}</b></span>
+      <span>근접 오답 <b>${near}</b></span>
+      <span>오답 <b>${wrong.length}</b></span>
+    </div>
+    ${wrong.length?`<div class="review-title">오답 노트</div>`+wrong.map(w=>
+      `<div class="review-item"><span class="rt">${w.q.display}</span>
+        <span class="ru"> — 내 답: ${w.given||"(미작성)"}</span></div>`).join(""):
+      `<div class="review-title" style="opacity:.9">완벽합니다. 오답이 없습니다. ✦</div>`}
+  `;
+  r.className="result show";
+  r.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ---------- controls ---------- */
+$("#modeSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  mode=b.dataset.mode;
+  [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
+  render();
+});
+$("#catSel").addEventListener("change",render);
+$("#shuffleChk").addEventListener("change",render);
+$("#gradeBtn").addEventListener("click",gradeAll);
+$("#resetBtn").addEventListener("click",render);
+
+render();
+</script>
+</body>
+</html>
