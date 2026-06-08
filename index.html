@@ -123,6 +123,21 @@
     font-size: 15px;
   }
 
+  .state {
+    margin: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--muted);
+    padding: 18px 20px;
+  }
+
+  .state.error {
+    border-color: #f2c9c9;
+    background: #fff7f7;
+    color: #9f3a3a;
+  }
+
   .open-link {
     display: inline-flex;
     align-items: center;
@@ -178,25 +193,198 @@
     <header class="masthead">
       <div>
         <h1>학습 HTML 목록</h1>
-        <p class="summary">저장소에 올린 학습 페이지를 한 곳에서 열 수 있습니다.</p>
+        <p class="summary">저장소에 올라온 HTML 학습 페이지를 자동으로 불러옵니다.</p>
       </div>
-      <div class="count">총 1개</div>
+      <div class="count" id="pageCount">불러오는 중</div>
     </header>
 
-    <section class="list" aria-label="학습 페이지 목록">
-      <article class="item">
-        <div>
-          <h2>문학 용어 단답형 퀴즈</h2>
-          <div class="meta" aria-label="페이지 정보">
-            <span class="tag">문학 용어</span>
-            <span class="tag">단답형</span>
-            <span class="tag">기말고사 대비</span>
-          </div>
-          <p class="description">정의를 읽고 한국어 또는 영어 문학 용어를 입력해 채점하는 퀴즈 페이지입니다.</p>
-        </div>
-        <a class="open-link" href="./literary-terms-short-answer-quiz.html">열기</a>
-      </article>
+    <section class="list" id="pageList" aria-label="학습 페이지 목록" aria-live="polite">
+      <p class="state" id="pageState">목록을 불러오는 중입니다.</p>
     </section>
   </main>
+
+<script>
+  const REPOSITORY_OWNER = "jisang0706";
+  const REPOSITORY_NAME = "kyeongeun_htmls";
+  const FALLBACK_BRANCH = "main";
+
+  const KNOWN_PAGE_META = {
+    "literary-terms-short-answer-quiz.html": {
+      order: 1,
+      title: "문학 용어 단답형 퀴즈",
+      tags: ["문학 용어", "단답형", "기말고사 대비"],
+      description: "정의를 읽고 한국어 또는 영어 문학 용어를 입력해 채점하는 퀴즈 페이지입니다."
+    }
+  };
+
+  const FALLBACK_PAGES = [
+    {
+      name: "literary-terms-short-answer-quiz.html",
+      title: "문학 용어 단답형 퀴즈",
+      tags: ["문학 용어", "단답형", "기말고사 대비"],
+      description: "정의를 읽고 한국어 또는 영어 문학 용어를 입력해 채점하는 퀴즈 페이지입니다."
+    }
+  ];
+
+  const pageList = document.querySelector("#pageList");
+  const pageCount = document.querySelector("#pageCount");
+
+  loadPages();
+
+  async function loadPages() {
+    try {
+      const branch = await resolvePagesBranch();
+      const files = await fetchHtmlFiles(branch);
+      const pages = await Promise.all(files.map(enrichPage));
+      renderPages(pages);
+    } catch (error) {
+      renderPages(FALLBACK_PAGES);
+    }
+  }
+
+  async function resolvePagesBranch() {
+    const pagesUrl = `https://api.github.com/repos/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/pages`;
+
+    try {
+      const response = await fetch(pagesUrl);
+      if (!response.ok) {
+        return FALLBACK_BRANCH;
+      }
+
+      const pages = await response.json();
+      return pages.source?.branch || FALLBACK_BRANCH;
+    } catch (error) {
+      return FALLBACK_BRANCH;
+    }
+  }
+
+  async function fetchHtmlFiles(branch) {
+    const contentsUrl = `https://api.github.com/repos/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/contents/?ref=${encodeURIComponent(branch)}`;
+    const response = await fetch(contentsUrl);
+
+    if (!response.ok) {
+      throw new Error(`GitHub contents request failed: ${response.status}`);
+    }
+
+    const entries = await response.json();
+    return entries
+      .filter((entry) => entry.type === "file")
+      .filter((entry) => entry.name.toLowerCase().endsWith(".html"))
+      .filter((entry) => entry.name.toLowerCase() !== "index.html")
+      .sort(comparePages);
+  }
+
+  async function enrichPage(file) {
+    const meta = KNOWN_PAGE_META[file.name] || {};
+    const title = meta.title || await readHtmlTitle(file) || prettifyFileName(file.name);
+
+    return {
+      name: file.name,
+      title,
+      tags: meta.tags || ["HTML"],
+      description: meta.description || "저장소에 추가된 HTML 학습 페이지입니다."
+    };
+  }
+
+  async function readHtmlTitle(file) {
+    if (!file.download_url) {
+      return "";
+    }
+
+    try {
+      const response = await fetch(file.download_url);
+      if (!response.ok) {
+        return "";
+      }
+
+      const html = await response.text();
+      const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      return match ? decodeHtml(match[1]).trim() : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function comparePages(a, b) {
+    const aOrder = KNOWN_PAGE_META[a.name]?.order || Number.MAX_SAFE_INTEGER;
+    const bOrder = KNOWN_PAGE_META[b.name]?.order || Number.MAX_SAFE_INTEGER;
+
+    if (aOrder !== bOrder) {
+      return aOrder - bOrder;
+    }
+
+    return a.name.localeCompare(b.name, "ko");
+  }
+
+  function renderPages(pages) {
+    pageList.innerHTML = "";
+    pageCount.textContent = `총 ${pages.length}개`;
+
+    if (pages.length === 0) {
+      showState("표시할 HTML 파일이 없습니다.", false);
+      return;
+    }
+
+    pages.forEach((page) => {
+      pageList.appendChild(createPageCard(page));
+    });
+  }
+
+  function createPageCard(page) {
+    const article = document.createElement("article");
+    article.className = "item";
+
+    const body = document.createElement("div");
+    const title = document.createElement("h2");
+    title.textContent = page.title;
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.setAttribute("aria-label", "페이지 정보");
+
+    page.tags.forEach((tagText) => {
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = tagText;
+      meta.appendChild(tag);
+    });
+
+    const description = document.createElement("p");
+    description.className = "description";
+    description.textContent = page.description;
+
+    const link = document.createElement("a");
+    link.className = "open-link";
+    link.href = `./${encodeURIComponent(page.name)}`;
+    link.textContent = "열기";
+
+    body.append(title, meta, description);
+    article.append(body, link);
+
+    return article;
+  }
+
+  function showState(message, isError) {
+    pageList.innerHTML = "";
+
+    const state = document.createElement("p");
+    state.className = isError ? "state error" : "state";
+    state.textContent = message;
+    pageList.appendChild(state);
+  }
+
+  function prettifyFileName(fileName) {
+    return fileName
+      .replace(/\.html$/i, "")
+      .replace(/[-_]+/g, " ")
+      .trim();
+  }
+
+  function decodeHtml(text) {
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+</script>
 </body>
 </html>
